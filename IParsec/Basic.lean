@@ -75,13 +75,26 @@ Sets the default indentation mode that is applied to all tokens to the given ind
 def localTokenMode {tok α : Type}(rel : IndentationRel)(p : Parsec tok α) : Parsec tok α :=
   modifyState (λ ⟨input, indents⟩ => State.mk input {indents with  rel := rel }) p
 
-def charP (c : Char) : Parsec Char Unit :=
+/--
+Parse a single token.
+-/
+def tokenP{tok : Type}[BEq tok](c : tok) : Parsec tok Unit :=
   Parsec.mk (λ s => match s.input with
-                    | List.nil => Consumed.Empty (Reply.Error "input is empty")
+                    | List.nil => Consumed.Empty (Reply.Error "Input is empty")
                     | List.cons x xs => if x == c
                                         then Consumed.Consumed (Reply.Ok Unit.unit ⟨xs, s.indent⟩)
                                         else Consumed.Consumed (Reply.Error "Character doesn't match")
                     )
+
+/--
+Parses and returns a single token if it satisfies the given predicate.
+-/
+def satisfyP{tok : Type}(p : tok → Bool) : Parsec tok tok :=
+  Parsec.mk (λ s => match s.input with
+                    | List.nil => Consumed.Empty (Reply.Error "Input is empty")
+                    | List.cons x xs => if p x
+                                        then Consumed.Consumed (Reply.Ok x ⟨xs, s.indent⟩)
+                                        else Consumed.Consumed (Reply.Error "Token does not satisfy predicate."))
 
 
 def parse{α : Type} (input : String) (parser : Parsec Char α) : Option α :=
@@ -131,21 +144,21 @@ def many1{α : Type}(p : Parsec tok α) : Parsec tok (List α) := do
   pure (x :: xs)
 
 def aab_parser : Parsec Char Unit := do
-  charP 'a'
-  charP 'a'
-  charP 'b'
+  tokenP 'a'
+  tokenP 'a'
+  tokenP 'b'
 
-def a_or_b_parser : Parsec Char Unit := or (backtrack (charP 'a')) (charP 'b')
+def a_or_b_parser : Parsec Char Unit := or (backtrack (tokenP 'a')) (tokenP 'b')
 
 
-#guard parse "" (charP 'a') == none
-#guard parse "a" (charP 'a') == some Unit.unit
-#guard parse "b" (charP 'a') == none
+#guard parse "" (tokenP 'a') == none
+#guard parse "a" (tokenP 'a') == some Unit.unit
+#guard parse "b" (tokenP 'a') == none
 #guard parse "aab" aab_parser == some Unit.unit
 #guard parse "bba" aab_parser == none
 #guard parse "a" a_or_b_parser == some Unit.unit
 #guard parse "b" a_or_b_parser == some Unit.unit
-#guard parse "" (many (charP 'a')) == some []
-#guard parse "aa" (many (charP 'a')) == some [Unit.unit, Unit.unit]
-#guard parse "" (many1 (charP 'a')) == none
-#guard parse "aa" (many1 (charP 'a')) == some [Unit.unit, Unit.unit]
+#guard parse "" (many (tokenP 'a')) == some []
+#guard parse "aa" (many (tokenP 'a')) == some [Unit.unit, Unit.unit]
+#guard parse "" (many1 (tokenP 'a')) == none
+#guard parse "aa" (many1 (tokenP 'a')) == some [Unit.unit, Unit.unit]
