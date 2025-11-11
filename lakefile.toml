@@ -4,3 +4,9 @@ defaultTargets = ["IParsec"]
 
 [[lean_lib]]
 name = "IParsec"
+
+[[require]]
+name = "veriflex"
+git = "https://github.com/BinderDavid/veriflex.git"
+rev = "07b968faf0c018fccc1faa1dec46a059ac773a0a"
+

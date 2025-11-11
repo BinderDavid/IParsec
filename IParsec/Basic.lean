@@ -6,8 +6,7 @@ inductive IndentationRel : Type where
 
 def ParseError : Type := String
 
-abbrev Indentation : Type := Int
-
+abbrev Indentation : Type := Nat
 
 def maxInd : Indentation := 1000
 

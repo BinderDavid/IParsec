@@ -1,5 +1,15 @@
 {"version": "1.1.0",
  "packagesDir": ".lake/packages",
- "packages": [],
- "name": "lib",
+ "packages":
+ [{"url": "https://github.com/BinderDavid/veriflex.git",
+   "type": "git",
+   "subDir": null,
+   "scope": "",
+   "rev": "07b968faf0c018fccc1faa1dec46a059ac773a0a",
+   "name": "veriflex",
+   "manifestFile": "lake-manifest.json",
+   "inputRev": "07b968faf0c018fccc1faa1dec46a059ac773a0a",
+   "inherited": false,
+   "configFile": "lakefile.toml"}],
+ "name": "IParsec",
  "lakeDir": ".lake"}
