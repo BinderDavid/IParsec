@@ -1,3 +1,6 @@
+import Veriflex.Located
+open Veriflex
+
 inductive IndentationRel : Type where
   | Eq : IndentationRel
   | Gt : IndentationRel
@@ -20,7 +23,7 @@ def initialIndentationState : IndentationState :=
   { min := 0, max := maxInd, absMode := False, rel := IndentationRel.Any}
 
 structure State(tok : Type) : Type  where
-  input : List tok
+  input : List (Located tok)
   indent : IndentationState
 
 inductive Consumed (α : Type) : Type where
@@ -80,7 +83,7 @@ Parse a single token.
 def tokenP{tok : Type}[BEq tok](c : tok) : Parsec tok Unit :=
   Parsec.mk (λ s => match s.input with
                     | List.nil => Consumed.Empty (Reply.Error "Input is empty")
-                    | List.cons x xs => if x == c
+                    | List.cons x xs => if x.content == c
                                         then Consumed.Consumed (Reply.Ok Unit.unit ⟨xs, s.indent⟩)
                                         else Consumed.Consumed (Reply.Error "Character doesn't match")
                     )
@@ -91,13 +94,13 @@ Parses and returns a single token if it satisfies the given predicate.
 def satisfyP{tok : Type}(p : tok → Bool) : Parsec tok tok :=
   Parsec.mk (λ s => match s.input with
                     | List.nil => Consumed.Empty (Reply.Error "Input is empty")
-                    | List.cons x xs => if p x
-                                        then Consumed.Consumed (Reply.Ok x ⟨xs, s.indent⟩)
+                    | List.cons x xs => if p x.content
+                                        then Consumed.Consumed (Reply.Ok x.content ⟨xs, s.indent⟩)
                                         else Consumed.Consumed (Reply.Error "Token does not satisfy predicate."))
 
 
 def parse{α : Type} (input : String) (parser : Parsec Char α) : Option α :=
-  let initialState : State Char := { input := input.toList, indent := initialIndentationState }
+  let initialState : State Char := { input := input.toList.map (λ x => ⟨0,x⟩), indent := initialIndentationState }
   match parser.run initialState with
   | Consumed.Consumed (Reply.Ok res _) => some res
   | Consumed.Empty (Reply.Ok res _) => some res
