@@ -99,6 +99,12 @@ def backtrack{α : Type}(p : Parsec α) : Parsec α :=
                     | Consumed.Empty (Reply.Error err) => Consumed.Empty (Reply.Error err)
                     )
 
+/--
+A parser that immediately fails without consuming any input.
+-/
+def fail {α : Type} : Parsec α :=
+  Parsec.mk (λ _ => Consumed.Empty (Reply.Error "fail"))
+
 /-- Left-biased or-combinator which doesn't backtrack -/
 def or {α: Type}(p₁ p₂ : Parsec α): Parsec α :=
   Parsec.mk (λ s => match p₁.run s with
@@ -107,6 +113,9 @@ def or {α: Type}(p₁ p₂ : Parsec α): Parsec α :=
                     | Consumed.Empty (Reply.Ok res s') => Consumed.Empty (Reply.Ok res s')
                     | Consumed.Empty (Reply.Error _) => p₂.run s
   )
+
+def ors{α : Type}(ps : List (Parsec α)) : Parsec α :=
+  List.foldr or fail ps
 
 
 def aab_parser : Parsec Unit := do
